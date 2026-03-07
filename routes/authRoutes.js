@@ -5,13 +5,12 @@ const User = require("../models/User");
 
 // Generate JWT Token
 const generateToken = (userId) => {
-  return jwt.sign(
-    { id: userId },
-    process.env.JWT_SECRET || "intelliship_secret_key_2026",
-    {
-      expiresIn: "30d",
-    },
-  );
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET environment variable is not defined");
+  }
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    expiresIn: "30d",
+  });
 };
 
 // @route   POST /api/auth/signup
@@ -151,10 +150,11 @@ router.get("/verify", async (req, res) => {
       });
     }
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "intelliship_secret_key_2026",
-    );
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET environment variable is not defined");
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {
